@@ -1,0 +1,3 @@
+rootProject.name='Camera2Helper'
+include ':app'
+include ':libCamera2Helper'
