@@ -1,0 +1,3 @@
+# libCamera2Helper
+
+使用Android Camera2相关Api实现视频预览与视频录制，并支持实时预览图像获取。绑定LifecycleOwner实现自动预览与停止
