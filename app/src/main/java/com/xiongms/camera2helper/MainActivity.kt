@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             CameraHelper.OnPreviewSurfaceCallback {
             override fun onPreviewUpdate(bitmap: Bitmap) {
                 // 实时获取摄像头预览图片
-                Log.e(TAG, "获取到图片信息")
+//                Log.e(TAG, "获取到图片信息")
             }
         })
     }
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun stopRecord(view: View) {
-        val videoFile = File(this.cacheDir, "video_${SystemClock.elapsedRealtime()}.mp4")
+        val videoFile = File(externalCacheDir!!.absolutePath, "video_${SystemClock.elapsedRealtime()}.mp4")
         if (mCamera2Helper!!.stopRecord(videoFile)) {
             Toast.makeText(this@MainActivity, "视频保存成功", Toast.LENGTH_LONG).show()
         } else {

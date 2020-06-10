@@ -331,8 +331,10 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
                 val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
                 if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
                     cameraId = cid
+                    break
                 }
             }
+
             if (cameraId.isNullOrEmpty()) {
                 cameraId = mCameraManager.cameraIdList[0]
             }
@@ -374,7 +376,10 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
      * 选择Video分辨率  ---优先选择高宽比为1，尺寸最小的分辨率
      *
      */
-    private fun chooseVideoSize(choices: Array<Size>): Size {
+    private fun chooseVideoSize(choices: Array<Size>?): Size {
+        if (choices == null) {
+            return Size(400, 400)
+        }
         val bigEnough = ArrayList<Size>()
         for (size in choices) {
             // 选择高宽相等的size
@@ -429,6 +434,12 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
 
     @Throws(Exception::class)
     private fun setupMediaRecorder() {
+
+
+        if (null != mMediaRecorder) {
+            mMediaRecorder!!.release()
+            mMediaRecorder = null
+        }
 
         if (mMediaRecorder == null) {
             mMediaRecorder = MediaRecorder()
@@ -499,7 +510,9 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
 
         try {
             closePreviewSession()
+
             setupMediaRecorder()
+
             setupImageReader()
             val surfaceTexture = textureView.surfaceTexture
             surfaceTexture!!.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
