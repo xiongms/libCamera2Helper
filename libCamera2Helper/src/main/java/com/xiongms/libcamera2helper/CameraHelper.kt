@@ -147,6 +147,12 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
      */
     private var isPreviewing = false
 
+    /**
+     * surface的宽高
+     */
+    private var surfaceWidth: Int = 0
+    private var surfaceHeight: Int = 0
+
 
     init {
         initParameter()
@@ -188,7 +194,9 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             width: Int,
             height: Int
         ) {
-            openCamera(width, height)
+            surfaceWidth = width
+            surfaceHeight = height
+            openCamera()
         }
 
         /**
@@ -199,6 +207,8 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             width: Int,
             height: Int
         ) {
+            surfaceWidth = width
+            surfaceHeight = height
             configureTransform(width, height)
         }
 
@@ -458,6 +468,10 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             ex.printStackTrace()
         }
 
+        if (videoTempFile.exists()) {
+            videoTempFile.delete()
+        }
+
         mMediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
         mMediaRecorder!!.setVideoSource(MediaRecorder.VideoSource.SURFACE)
         mMediaRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -613,9 +627,9 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
      * 打开摄像头
      */
     @SuppressLint("MissingPermission")
-    private fun openCamera(width: Int, height: Int) {
+    private fun openCamera() {
         try {
-            configureTransform(width, height)
+            configureTransform(surfaceWidth, surfaceHeight)
             mCameraManager.openCamera(cameraId!!, mStateCallback, null)
         } catch (e: CameraAccessException) {
             Log.e(context.javaClass.simpleName, "Cannot access the camera.")
@@ -641,13 +655,6 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             if (mImageReader != null) {
                 mImageReader!!.close()
                 mImageReader = null
-            }
-
-            // 删除临时文件
-            if (videoTempFile.exists()) {
-                if (!videoTempFile.delete()) {
-                    videoTempFile.deleteOnExit()
-                }
             }
 
             if (null != mMediaRecorder) {
@@ -735,7 +742,7 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
     private fun startPreview() {
         startBackgroundThread()
         if (textureView.isAvailable) {
-            openCamera(textureView.width, textureView.height)
+            openCamera()
         } else {
             textureView.surfaceTextureListener = mSurfaceTextureListener
         }
@@ -778,8 +785,7 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
                 if (now - startRecordTime < 1000) {
                     Thread.sleep(1000)
                 }
-                mMediaRecorder?.stop()
-                mMediaRecorder?.reset()
+                stopPreview()
             } catch (ex: Exception) {
                 ex.printStackTrace()
                 onRecordListener?.onError(ex)
@@ -797,7 +803,9 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
                     val fileLock = fos.channel.lock()
                     fileLock?.release()
                     fos.close()
-                    if (videoTempFile.renameTo(destFile)) {
+                    videoTempFile.copyTo(destFile, true, 1000)
+                    if (destFile.exists()) {
+                        destFile.deleteOnExit()
                         onRecordListener?.onSavedRecord(destFile)
                         result = true
                     }
@@ -810,7 +818,7 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             }
 
             // 重新配置参数，进入预览状态
-            readyToPreview()
+            startPreview()
         }
         return result
     }
