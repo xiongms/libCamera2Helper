@@ -350,10 +350,10 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
                     }
 
                     // 从配置文件加载分辨率设置
-                    mVideoSize = chooseVideoSize(map.getOutputSizes(SurfaceTexture::class.java))
+                    mVideoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 
                     // 预览分辨率和录制分辨率保持一致
-                    mPreviewSize = mVideoSize
+                    mPreviewSize = chooseVideoSize(map.getOutputSizes(SurfaceTexture::class.java))
                     mOrientation = context.resources.configuration.orientation
                     mPreviewSize?.let { previewSize ->
                         if (mOrientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -376,12 +376,13 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
      * 选择Video分辨率  ---优先选择高宽比为1，尺寸最小的分辨率
      *
      */
-    private fun chooseVideoSize(choices: Array<Size>?): Size {
+    private fun chooseVideoSize(choices: Array<Size>): Size {
         if (choices == null) {
             return Size(400, 400)
         }
         val bigEnough = ArrayList<Size>()
         for (size in choices) {
+            Log.e(TAG, "size.width=${size.width}  size.height=${size.height}")
             // 选择高宽相等的size
             if (size.width == size.height) {
                 bigEnough.add(size)
@@ -391,6 +392,12 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
             return Collections.min(bigEnough, CompareSizesByArea())
         } else {
             Log.e(TAG, "Couldn't find any suitable video size")
+            for (size in choices) {
+                // 选择高宽相等的size
+                if (size.width < 700) {
+                    return size
+                }
+            }
             return choices[0]
         }
     }
