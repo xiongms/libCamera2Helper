@@ -392,7 +392,6 @@ class CameraHelper(lifecycleOwner: LifecycleOwner, val textureView: AutoFitTextu
         }
         val bigEnough = ArrayList<Size>()
         for (size in choices) {
-            Log.e(TAG, "size.width=${size.width}  size.height=${size.height}")
             // 选择高宽相等的size
             if (size.width == size.height) {
                 bigEnough.add(size)
